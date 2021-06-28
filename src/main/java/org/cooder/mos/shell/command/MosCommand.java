@@ -34,6 +34,7 @@ import picocli.CommandLine.Help.TextTable;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
 
+@Command
 public abstract class MosCommand implements Callable<Integer> {
 
     @ParentCommand
@@ -47,40 +48,47 @@ public abstract class MosCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
-        if (in == null)  in = shell.in;
-        if (out == null) out = shell.out;
-        if (err == null) err = shell.err;
+        if (in == null) {
+            in = shell.in;
+        }
+        if (out == null) {
+            out = shell.out;
+        }
+        if (err == null) {
+            err = shell.err;
+        }
 
         try {
             return runCommand();
         } catch (Throwable t) {
             err.println(t.getMessage());
-            t.printStackTrace();
+            t.printStackTrace(err);
         }
         return 0;
     }
 
     @Command(name = ">")
     public void redirect(@Parameters(paramLabel = "<path>") String path) throws IOException {
-        String[] paths = shell.absolutePath(path);
-        FileOutputStream fos = new FileOutputStream(new MosFile(paths), FileSystem.WRITE);
-        this.out = new PrintStream(fos);
-
-        try {
-            call();
-        } catch (Exception e) {
-            e.printStackTrace(out);
-        }
-
-        out.close();
-        out = shell.out;
+        redirectWithMode(path, FileSystem.WRITE);
     }
 
     @Command(name = ">>")
     public void redirectAppend(@Parameters(paramLabel = "<path>", description = "output file path") String path)
                     throws IOException {
+        redirectWithMode(path, FileSystem.APPEND);
+    }
+
+    private void redirectWithMode(String path, int mode) throws IOException {
         String[] paths = shell.absolutePath(path);
-        FileOutputStream fos = new FileOutputStream(new MosFile(paths), FileSystem.APPEND);
+        MosFile mosFile = new MosFile(paths);
+        if (mosFile.isDir()) {
+            if (err == null) {
+                this.err = shell.err;
+            }
+            err.println(path + ": is a directory");
+            return;
+        }
+        FileOutputStream fos = new FileOutputStream(mosFile, mode);
         this.out = new PrintStream(fos);
 
         try {

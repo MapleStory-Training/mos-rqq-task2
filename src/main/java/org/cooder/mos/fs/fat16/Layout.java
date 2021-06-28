@@ -42,7 +42,7 @@ public class Layout {
         final byte[] jmpCode = new byte[] { (byte) 0xEB, 0x3C, (byte) 0x90 };
 
         // Oem Name 8 bytes
-        final byte[] oemName = new byte[] { 'm', 'o', 's', '-', 'n', 'i', 'l', 0 };
+        final byte[] oemName = new byte[] { 'm', 'o', 's', '-', 'r', 'q', 'q', 0 };
 
         // 每扇区字节数，2 bytes
         final short sectorSize = PER_SECTOR_SIZE;
